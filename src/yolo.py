@@ -1,20 +1,49 @@
 # YOLO pedestrian detection module
 from ultralytics import YOLO
 
+
 class YoloDetector:
-    def __init__(self, model_name='yolov8n.pt'):
-        # On charge le modèle (télécharge automatiquement si absent)
+    def __init__(
+        self,
+        model_name="yolov8n.pt",
+        conf_thres=0.4,        # seuil de confiance
+        min_box_area=1500     # surface minimale d'une bounding box
+    ):
+        """
+        Initialisation du détecteur YOLO pour les piétons
+        """
         print(f"Chargement de YOLO ({model_name})...")
         self.model = YOLO(model_name)
-    
+        self.conf_thres = conf_thres
+        self.min_box_area = min_box_area
+
     def detect(self, frame):
         """
-        Détecte les objets dans l'image.
-        Retourne une liste de boîtes : [x1, y1, x2, y2, conf, class_id]
+        Détecte les piétons dans une image.
+
+        Retour :
+        Liste de boîtes [x1, y1, x2, y2, conf, class_id]
         """
-        # classes=[0] force YOLO à ne chercher que les "Personnes"
-        # verbose=False évite de polluer la console avec du texte
-        results = self.model(frame, classes=[0], verbose=False)
-        
-        # On retourne les données des boîtes détectées
-        return results[0].boxes.data.tolist()
+
+        # Détection YOLO (classe 0 = person)
+        results = self.model(
+            frame,
+            classes=[0],
+            conf=self.conf_thres,
+            verbose=False
+        )
+
+        boxes = results[0].boxes.data.tolist()
+        filtered_boxes = []
+
+        for box in boxes:
+            x1, y1, x2, y2, conf, cls = box
+
+            # Calcul surface de la bounding box
+            area = (x2 - x1) * (y2 - y1)
+
+            # Filtrage par taille minimale
+            if area >= self.min_box_area:
+                filtered_boxes.append(box)
+
+        return filtered_boxes
