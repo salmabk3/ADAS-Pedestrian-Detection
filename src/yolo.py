@@ -6,7 +6,9 @@ class YoloDetector:
     def __init__(
         self,
         model_name="yolov8n.pt",
-        conf_thres=0.4,        # seuil de confiance
+        conf_thres=0.4,        # seuil de confiance supprime les détections douteuses
+
+#                   réduit fortement les faux positifs
         min_box_area=1500     # surface minimale d'une bounding box
     ):
         """
@@ -28,7 +30,7 @@ class YoloDetector:
         # Détection YOLO (classe 0 = person)
         results = self.model(
             frame,
-            classes=[0],
+            classes=[0], #garantit qu’on ne détecte QUE des personnes
             conf=self.conf_thres,
             verbose=False
         )
